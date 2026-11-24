@@ -2936,7 +2936,7 @@ DATA.discussion = [
 
   /* ---------- accueil ---------- */
   var STATIONS = [
-    { k: "s1", n: 1, t: "Le tri", d: "20 phrases : fait observé, interprétation, ou à ne pas transmettre", m: 35, mode: "👥 ENSEMBLE : un seul téléphone" },
+    { k: "s1", n: 1, t: "Le tri", d: "Test de départ, puis 20 phrases : fait observé, interprétation, ou à ne pas transmettre", m: 35, mode: "📱 CHACUN (test de départ, 5 min), puis 👥 ENSEMBLE : un seul téléphone" },
     { k: "s2", n: 2, t: "Reformuler", d: "Réécrire des phrases floues pour qu'elles se vérifient", m: 30, mode: "📱 CHACUN, puis 👥 ENSEMBLE" },
     { k: "s3", n: 3, t: "La chaîne", d: "Transmettre en chaîne de téléphone en téléphone (QR code)", m: 70, mode: "📱 CHACUN, puis 👥 ENSEMBLE pour chaque révélation" },
     { k: "s4", n: 4, t: "Bilan", d: "Ce que vous retenez, à copier ou à garder", m: 15, mode: "📱 CHACUN, puis 👥 ENSEMBLE" }
@@ -2989,6 +2989,9 @@ DATA.discussion = [
       "Lisez la correction à voix haute avant de passer à la carte suivante.",
       "Changez de pilote toutes les 5 cartes."]) +
       '<div class="card teal"><b>Votre travail</b><p>Vous lisez 20 phrases qu\'un AS pourrait dire à une IDE. Pour chacune : est-ce un <b>fait</b> (vu, mesuré, entendu), une <b>interprétation</b> ou un flou, ou quelque chose qu\'on ne transmet pas ?</p></div>' +
+      (ST.s1.pre
+        ? '<div class="card ok"><b>✓ Test de départ fait</b><p>Gardez en tête votre pseudo et votre code à 4 chiffres : vous en aurez besoin pour le bilan final.</p></div>'
+        : '<div class="card orange"><b>📱 Avant de commencer : le test de départ (5 minutes, chacun sur son téléphone)</b><p>Touchez le bouton. Choisissez un <b>pseudo</b> et un <b>code à 4 chiffres</b> (pas votre nom) et <b>notez-les</b> : ils servent à retrouver votre progression à la fin. À la fin du test, un bouton vous ramène ici.</p><a class="btn" data-act="pre" href="https://victorious-smoke-0d8b5e503.4.azurestaticapps.net/t?c=825474&p=pre&r=https%3A%2F%2Floiswucher.github.io%2Fcollabotron%2F%23%2Fs1">Faire le test de départ</a></div>') +
       '<button class="btn" data-act="s1go">Nous sommes prêts, première carte</button>', { timer: "s1" });
   }
   function s1feedback(i) {
@@ -3277,7 +3280,7 @@ DATA.discussion = [
       '<label for="j"><b>Une phrase vraie que vous avez transmise pendant la chaîne, ou que vous diriez maintenant</b></label><textarea id="j" data-act="s4txt" data-f="juste" style="min-height:90px">' + esc(ST.s4.juste) + "</textarea>" +
       '<label for="f"><b>Une phrase floue que vous ne direz plus</b></label><textarea id="f" data-act="s4txt" data-f="flou" style="min-height:90px">' + esc(ST.s4.flou) + "</textarea>" +
       '<div class="card teal"><b>👥 Ensemble, à voix haute : question de clôture</b><p>Quelle question de l\'IDE vous a le plus surpris pendant la chaîne, et que feriez-vous pour y répondre avant qu\'elle la pose ?</p></div>' +
-      '<div class="card orange"><b>📱 Chacun, sur son téléphone : le bilan en ligne (5 minutes)</b><p>Touchez le bouton. Choisissez un <b>pseudo</b> et un <b>code à 4 chiffres</b> : pas votre nom. Si on vous dit qu\'il n\'y a pas de test de départ, touchez « Faire le test quand même ».</p><a class="btn" href="https://victorious-smoke-0d8b5e503.4.azurestaticapps.net/t?c=825474&p=post" target="_blank" rel="noopener">Faire le bilan en ligne</a></div>' +
+      '<div class="card orange"><b>📱 Chacun, sur son téléphone : le bilan en ligne (5 minutes)</b><p>Touchez le bouton. Choisissez un <b>pseudo</b> et un <b>code à 4 chiffres</b> : pas votre nom. Saisissez les <b>mêmes identifiants</b> que pour le test de départ.</p><a class="btn" href="https://victorious-smoke-0d8b5e503.4.azurestaticapps.net/t?c=825474&p=post&end=1" target="_blank" rel="noopener">Faire le bilan en ligne</a></div>' +
       '<button class="btn" data-act="s4copy">Copier mon bilan</button><button class="btn orange" data-act="s4fin">Terminer la séance</button>', { timer: "s4" });
   }
 
@@ -3306,6 +3309,7 @@ DATA.discussion = [
     reset: function () { if (confirm("Effacer vos réponses sur cet appareil ?")) { localStorage.removeItem(KEY); ST = loadState(); location.hash = "#/"; route(); } },
     s1p: function (el) { var v = el.dataset.v; if (v === "A") { s1tmp = { pile: "A" }; } else { s1tmp = { pile: v, fb: true }; ST.s1.a.push({ pile: v }); save(); } s1(); },
     s1q: function (el) { s1tmp = { pile: "A", quand: el.dataset.v, fb: true }; ST.s1.a.push({ pile: "A", quand: el.dataset.v }); save(); s1(); },
+    pre: function () { ST.s1.pre = true; save(); return true; },
     s1go: function () { ST.s1.intro = true; save(); s1(); },
     s1next: function () { s1tmp = null; s1(); },
     s1redo: function () { ST.s1 = { i: 0, a: [] }; s1tmp = null; ST.t.s1 = Date.now(); save(); s1(); },
