@@ -2698,7 +2698,8 @@ DATA.situations = [
     contexte: "Il est 9 h 20. Vous êtes AS en soins de longue durée. Voici ce que vous savez de Madame D.",
     fiche: [
       "À la toilette de 9 h, vous avez vu une rougeur au talon droit, d'environ 3 cm. Selon l'équipe de nuit, elle était déjà là au lever.",
-      "Elle dit que « ça brûle un peu » quand vous touchez son talon.",
+      "Elle dit que « ça brûle un peu » quand vous touchez son talon : EN 3 sur 10.",
+      "Vous avez appuyé sur la rougeur avec un doigt (vitropression) : elle ne blanchit pas.",
       "Elle passe la journée au fauteuil et ne change de position qu'aux repas.",
       "Elle a bu deux verres depuis 7 h.",
       "Elle a râlé parce que l'eau de la toilette était trop froide."
@@ -2706,13 +2707,55 @@ DATA.situations = [
     cles: [
       "Rougeur au talon droit, environ 3 cm",
       "Déjà présente au lever selon l'équipe de nuit (source : équipe de nuit)",
-      "Elle dit que « ça brûle un peu » au toucher",
+      "Elle dit que « ça brûle un peu » au toucher, EN 3 sur 10",
+      "Vitropression : la rougeur ne blanchit pas",
       "Au fauteuil toute la journée, change de position seulement aux repas",
       "Deux verres bus depuis 7 h"
     ],
     parasite: "L'eau de la toilette trop froide",
     prescription: "Soulagez l'appui du talon droit avec un coussin ou une talonnière. Faites-la changer de position toutes les 2 heures. Proposez-lui à boire régulièrement. Montrez-moi le talon cet après-midi.",
     prescription2: "Complément : mesurez la rougeur chaque jour et notez-la. Ne massez pas le talon.",
+    arbre: {
+      kw: {
+        ROUGEUR: { label: "la rougeur au talon", re: /rougeur|rouge|talon|3 cm/ },
+        ANCIENNETE: { label: "l'ancienneté de la rougeur", re: /deja la|deja present|au lever|equipe de nuit|depuis|cette nuit/ },
+        DOULEUR: { label: "la douleur", re: /brule|douleur|\bmal\b|\beva\b|\d\s*\/\s*10/, raw: /\bEN\s*[:=]?\s*\d/ },
+        IMMOBILITE: { label: "l'immobilité au fauteuil", re: /fauteuil|change de position|toute la journee|assise/ },
+        HYDRATATION: { label: "les boissons", re: /verre|boire|boit|\bbu\b|bus\b|boisson|hydrat/ },
+        VITRO: { label: "la vitropression", re: /vitropression|blanchi|appuy/ },
+        NONBLANCH: { label: "une rougeur qui ne blanchit pas", re: /ne blanchi|non blanchi|persist|reste rouge|ne disparait pas|ne s'efface pas/ }
+      },
+      step2: [
+        { si: function (f) { return f.ROUGEUR && f.ANCIENNETE && (f.DOULEUR || f.IMMOBILITE); },
+          txt: "Rougeur au talon depuis la nuit, sensible, chez une dame qui reste au fauteuil : risque d'escarre. Soulagez l'appui du talon avec un coussin ou une talonnière. Changement de position toutes les 2 heures, pas de massage, boissons régulières. Je regarde le talon cet après-midi.",
+          plus: function (f) { return (f.NONBLANCH ? " Une rougeur qui ne blanchit pas à la pression, c'est ce qui m'inquiète." : " Avez-vous fait la vitropression ? Est-ce que ça blanchit ?") + (f.HYDRATATION ? "" : " Où en sont ses boissons ?"); },
+          cles: ["Soulager l'appui du talon (coussin ou talonnière)", "Changer de position toutes les 2 heures", "Pas de massage", "Boissons régulières", "Le médecin regarde le talon cet après-midi"] },
+        { si: function (f) { return f.ROUGEUR && (f.DOULEUR || f.IMMOBILITE); },
+          txt: "Rougeur au talon : soulagez l'appui, changez-la de position toutes les 2 heures. Depuis quand est-elle là ? Demandez à l'équipe de nuit et rappelez-moi.",
+          plus: function (f) { return f.VITRO ? "" : " Faites aussi la vitropression."; },
+          cles: ["Soulager l'appui, changer de position toutes les 2 heures", "Demander depuis quand à l'équipe de nuit, rappeler le médecin"] },
+        { si: function (f) { return f.ROUGEUR; },
+          txt: "Je ne peux pas conclure. Précisez depuis quand, si elle a mal, si elle reste assise. Rappelez-moi.",
+          cles: ["Préciser depuis quand, la douleur, la position, puis rappeler le médecin"] },
+        { si: function () { return true; },
+          txt: "Pas d'inquiétude, surveillance habituelle.",
+          cles: ["Surveillance habituelle"] }
+      ],
+      step4: [
+        { si: function (f) { return f.ROUGEUR && f.ANCIENNETE && f.NONBLANCH; },
+          txt: "J'ai vu le talon : escarre de stade 1 au talon droit. Talonnière, changement de position toutes les 2 heures, pas de massage. Vous mesurez la rougeur chaque jour et vous la notez. Je préviens l'infirmière référente plaies.",
+          cles: ["Escarre de stade 1 au talon droit", "Talonnière, changement de position toutes les 2 heures, pas de massage", "Mesurer la rougeur chaque jour et la noter", "Le médecin prévient l'infirmière référente plaies"] },
+        { si: function (f) { return f.ROUGEUR && f.ANCIENNETE; },
+          txt: "Je ne sais pas si la rougeur blanchit à la pression. Soulagez l'appui, mesurez la rougeur chaque jour et notez-la. Je regarde le talon demain.",
+          cles: ["Soulager l'appui", "Mesurer la rougeur chaque jour et la noter", "Le médecin regarde le talon demain"] },
+        { si: function (f) { return f.ROUGEUR; },
+          txt: "Je ne sais pas depuis quand elle est là ni si elle s'aggrave. Soulagez l'appui, je regarde le talon demain.",
+          cles: ["Soulager l'appui", "Le médecin regarde le talon demain"] },
+        { si: function () { return true; },
+          txt: "Pas de changement. Je note sans particularité.",
+          cles: ["Pas de changement, sans particularité"] }
+      ]
+    },
     clesRx2: ["Mesurer la rougeur chaque jour et la noter", "Ne pas masser le talon"],
     clesRx: [
       "Soulager l'appui du talon droit (coussin ou talonnière)",
