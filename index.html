@@ -2630,7 +2630,7 @@ DATA.situations = [
 ];
 
 DATA.discussion = [
-  "À quel maillon l'information la plus importante a-t-elle commencé à se perdre ou à se déformer ? Qu'est-ce qui l'a provoqué ?",
+  "À quel participant l'information la plus importante a-t-elle commencé à se perdre ou à se déformer ? Qu'est-ce qui l'a provoqué ?",
   "Quelle phrase aurait pu être dite autrement par un AS ou un IDE pour éviter la perte ? Écrivez-la ensemble.",
   "Qu'est-ce qui a été ajouté et qui ne figurait pas dans les faits d'origine ? D'où vient cet ajout (conclusion, habitude, supposition) ?"
 ];
@@ -2868,9 +2868,9 @@ DATA.discussion = [
       "Écrivez votre transmission, touchez « Valider ». Un QR code apparaît.",
       "Montrez-le à la personne à votre <b>gauche</b>. Elle le scanne avec l'<b>appareil photo</b> de son téléphone.",
       "En même temps, scannez le QR code que votre voisin de <b>droite</b> vous montre. Vous lisez son message et jouez votre rôle (IDE, AS de la relève…).",
-      "Répétez jusqu'au dernier maillon. Quand il valide, sa <b>révélation</b> s'affiche : à ce moment, tout le monde se rassemble autour <b>d'un seul téléphone</b>."]) +
+      "Répétez jusqu'au dernier participant. Quand il valide, sa <b>révélation</b> s'affiche : à ce moment, tout le monde se rassemble autour <b>d'un seul téléphone</b>."]) +
       '<p>Un message passe de téléphone en téléphone, comme au téléphone arabe. Chacun lit seulement le message du précédent. À la fin, vous comparez avec les faits d\'origine. Chacun joue tous les rôles, puisque quatre chaînes tournent en même temps.</p>' +
-      '<div class="card"><b>Longueur de la chaîne</b><div class="row" style="margin-top:6px">' + [3, 4, 5].map(function (n) { return '<button class="btn ' + (chainLen === n ? "" : "alt") + '" data-act="chainlen" data-n="' + n + '">' + n + " maillons</button>"; }).join("") + '</div><p class="notice">Gardez le nombre de personnes de votre groupe.</p></div>' +
+      '<div class="card"><b>Nombre de participants dans la chaîne</b><div class="row" style="margin-top:6px">' + [3, 4, 5].map(function (n) { return '<button class="btn ' + (chainLen === n ? "" : "alt") + '" data-act="chainlen" data-n="' + n + '">' + n + " participants</button>"; }).join("") + '</div><p class="notice">Choisissez le nombre de personnes de votre groupe.</p></div>' +
       "<h2>Je démarre ma chaîne avec…</h2>" + sits +
       '<p class="notice">Vous avez reçu un QR code ? Ne le scannez pas ici : ouvrez l\'appareil photo de votre téléphone.</p>' +
       '<button class="btn orange" data-act="goto" data-n="3" data-to="s4">Nous avons terminé les chaînes : passer au bilan</button>', { timer: "s3" });
@@ -2900,7 +2900,7 @@ DATA.discussion = [
   function compose(p) {
     var s = sit(chain.s), n = chain.n, role = roleOf(p);
     var draft = ss(chainKey + ".d") || "";
-    var head = '<span class="pill">Maillon ' + p + " sur " + n + '</span> <span class="pill orange">' + esc(roleLabel(p, n)) + "</span>";
+    var head = '<span class="pill">Participant ' + p + " sur " + n + '</span> <span class="pill orange">' + esc(roleLabel(p, n)) + "</span>";
     var body = modeBar("chacun") + "<h1>Vous êtes : " + (role === "AS" ? "AS" : "IDE") + "</h1><p>" + head + "</p>";
     var prompt, hint, ready = true;
     if (p === 1) {
@@ -2954,7 +2954,7 @@ DATA.discussion = [
     var svg, err = "";
     try { svg = qrSvg(url); } catch (e) { err = "Le message est trop long pour être mis en QR code. Revenez en arrière et raccourcissez-le."; }
     var who = p + 1 <= n ? roleLabel(p + 1, n) : "";
-    page("Chaîne", modeBar("chacun") + '<h1>Montrez ce QR code à votre gauche</h1><ol class="clean"><li>Montrez-le à la personne à votre <b>gauche</b>, qui joue le maillon suivant (<b>' + esc(who) + '</b>).</li><li>Elle ouvre l\'<b>appareil photo de son téléphone</b>, vise le code et touche le lien qui apparaît.</li><li>Pendant ce temps, scannez le code de votre voisin de <b>droite</b>.</li></ol>' +
+    page("Chaîne", modeBar("chacun") + '<h1>Montrez ce QR code à votre gauche</h1><ol class="clean"><li>Montrez-le à la personne à votre <b>gauche</b>, qui est le participant suivant (<b>' + esc(who) + '</b>).</li><li>Elle ouvre l\'<b>appareil photo de son téléphone</b>, vise le code et touche le lien qui apparaît.</li><li>Pendant ce temps, scannez le code de votre voisin de <b>droite</b>.</li></ol>' +
       (err ? '<div class="card bad">' + esc(err) + "</div>" : '<div class="qrbox">' + svg + "</div>") +
       '<p class="notice">Luminosité au maximum, écran bien à plat, sans reflet. Si le scan échoue, utilisez le bouton « Copier le lien » et envoyez-le par message.</p>' +
       '<button class="btn alt" data-act="copy" data-url="' + esc(url) + '">Copier le lien</button>' +
@@ -2973,7 +2973,7 @@ DATA.discussion = [
   function reveal() {
     var s = sit(chain.s), n = chain.n; mxLoad();
     var hops = []; for (var i = 1; i <= n; i++) hops.push(i);
-    var head = "<tr><th>Élément</th>" + hops.map(function (h) { return "<th>M" + h + "<br>" + roleOf(h) + "</th>"; }).join("") + "</tr>";
+    var head = "<tr><th>Élément</th>" + hops.map(function (h) { return "<th>P" + h + "<br>" + roleOf(h) + "</th>"; }).join("") + "</tr>";
     function rowFor(txt, key, rx, parasite) {
       var cells = hops.map(function (h) {
         if (rx && h === 1) return '<td class="na">–</td>';
@@ -2986,9 +2986,9 @@ DATA.discussion = [
     var rows = s.cles.map(function (c, i) { return rowFor(c, "c" + i, false); }).join("") +
       s.clesRx.map(function (c, i) { return rowFor(c, "r" + i, true); }).join("") +
       rowFor(s.parasite, "p0", false, true);
-    var msgs = chain.m.map(function (m, i) { return '<div class="msg"><small>Maillon ' + (i + 1) + " · " + esc(roleLabel(i + 1, n)) + "</small>" + nl(m) + "</div>"; }).join("");
+    var msgs = chain.m.map(function (m, i) { return '<div class="msg"><small>Participant ' + (i + 1) + " · " + esc(roleLabel(i + 1, n)) + "</small>" + nl(m) + "</div>"; }).join("");
     var counters = hops.map(function (h) {
-      return '<div class="counter"><span>Maillon ' + h + "</span><span><button data-act=\"addm\" data-h=\"" + h + '">−</button> <b id="add' + h + '" style="display:inline-block;min-width:28px;text-align:center">' + (mx.add[h] || 0) + '</b> <button data-act="addp" data-h="' + h + '">+</button></span></div>';
+      return '<div class="counter"><span>Participant ' + h + "</span><span><button data-act=\"addm\" data-h=\"" + h + '">−</button> <b id="add' + h + '" style="display:inline-block;min-width:28px;text-align:center">' + (mx.add[h] || 0) + '</b> <button data-act="addp" data-h="' + h + '">+</button></span></div>';
     }).join("");
     var body = mode("tous", [
       "Rassemblez-vous autour de <b>ce téléphone</b>, posé au centre. Les autres restent dans la poche.",
@@ -2998,12 +2998,12 @@ DATA.discussion = [
       "Quand vous avez fini, prenez le téléphone d'un autre pour la révélation suivante."]) + "<h1>La révélation</h1><p><b>Situation " + s.id + " : " + esc(s.titre) + "</b></p>" +
       "<h2>Ce que l'AS savait au départ</h2><div class=\"card teal\"><ul class=\"clean\">" + s.fiche.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></div>" +
       "<h2>Ce que le médecin a prescrit</h2><div class=\"card orange\">« " + esc(s.prescription) + " »</div>" +
-      "<h2>La chaîne, maillon par maillon</h2>" + msgs +
-      "<h2>Analyse</h2><p>Pour chaque élément et chaque maillon, touchez la case pour indiquer ce que contient le message.</p>" +
+      "<h2>La chaîne, participant par participant</h2>" + msgs +
+      "<h2>Analyse</h2><p>Pour chaque élément et chaque participant, touchez la case pour indiquer ce que contient le message.</p>" +
       '<p class="legend"><span><b>✓</b> bien transmis</span><span><b>≈</b> déformé</span><span><b>✗</b> perdu</span><span><b>·</b> pas évalué</span></p>' +
       '<div style="overflow-x:auto"><table class="matrix">' + head + rows + "</table></div>" +
       '<div id="sum"></div>' +
-      "<h2>Ajouts qui ne figuraient pas dans les faits</h2><p class=\"mute\">Comptez, pour chaque maillon, les informations inventées ou supposées.</p>" + counters +
+      "<h2>Ajouts qui ne figuraient pas dans les faits</h2><p class=\"mute\">Comptez, pour chaque participant, les informations inventées ou supposées.</p>" + counters +
       "<h2>À discuter ensemble</h2><div class=\"card olive\"><ol class=\"clean\">" + DATA.discussion.map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("") + "</ol></div>" +
       '<button class="btn alt" data-act="showfinal">Afficher le QR de la révélation pour mon groupe</button><div id="finalqr"></div>' +
       '<a class="btn" href="#/s3">Révélation terminée, retour à la station 3</a>';
@@ -3019,7 +3019,7 @@ DATA.discussion = [
         if (k.charAt(0) === "r" && h === 1) return;
         var v = mx.g[k + "_" + h]; if (v === "ok") ok++; else if (v === "def") def++; else if (v === "no") no++;
       });
-      if (ok + def + no) out.push("Maillon " + h + " : " + ok + " bien transmis, " + def + " déformé" + (def > 1 ? "s" : "") + ", " + no + " perdu" + (no > 1 ? "s" : ""));
+      if (ok + def + no) out.push("Participant " + h + " : " + ok + " bien transmis, " + def + " déformé" + (def > 1 ? "s" : "") + ", " + no + " perdu" + (no > 1 ? "s" : ""));
     }
     var el = $("#sum"); if (!el) return;
     el.innerHTML = out.length ? '<div class="card mid"><b>Bilan de la chaîne</b><ul class="clean">' + out.map(function (o) { return "<li>" + esc(o) + "</li>"; }).join("") + "</ul></div>" : "";
