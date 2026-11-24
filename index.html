@@ -2863,13 +2863,13 @@ DATA.discussion = [
       return '<button class="btn alt" data-act="chainstart" data-id="' + s.id + '">Situation ' + s.id + "</button>";
     }).join("");
     page("Chaîne", '<h1>Station 3 : la chaîne</h1>' + mode("chacun", [
-      "Asseyez-vous en <b>cercle</b>. Vous passez les QR codes à votre <b>gauche</b> et vous recevez de votre <b>droite</b>.",
-      "Chacun choisit une situation <b>différente</b> (1, 2, 3, 4) et touche son bouton plus bas. Vous êtes AS : vous connaissez les faits.",
+      "Asseyez-vous en <b>cercle</b>. Le QR code passe de téléphone en téléphone, vers la personne à votre <b>gauche</b>.",
+      "L'un de vous choisit une situation et la débute. Il répond <b>seul</b> aux consignes, sans le groupe.",
       "Écrivez votre transmission, touchez « Valider ». Un QR code apparaît.",
       "Montrez-le à la personne à votre <b>gauche</b>. Elle le scanne avec l'<b>appareil photo</b> de son téléphone.",
-      "En même temps, scannez le QR code que votre voisin de <b>droite</b> vous montre. Vous lisez son message et jouez votre rôle (IDE, AS de la relève…).",
+      "À son tour, la personne qui a scanné lit le message <b>seule</b> et joue son rôle (IDE, AS de la relève…), puis écrit sa propre transmission.",
       "Répétez jusqu'au dernier participant. Quand il valide, sa <b>révélation</b> s'affiche : à ce moment, tout le monde se rassemble autour <b>d'un seul téléphone</b>."]) +
-      '<p>Un message passe de téléphone en téléphone, comme au téléphone arabe. Chacun lit seulement le message du précédent. À la fin, vous comparez avec les faits d\'origine. Chacun joue tous les rôles, puisque quatre chaînes tournent en même temps.</p>' +
+      '<p>Un message passe de téléphone en téléphone, comme au téléphone arabe. Chacun lit seulement le message du précédent. À la fin, vous comparez avec les faits d\'origine.</p>' +
       '<div class="card"><b>Nombre de participants dans la chaîne</b><div class="row" style="margin-top:6px">' + [3, 4, 5].map(function (n) { return '<button class="btn ' + (chainLen === n ? "" : "alt") + '" data-act="chainlen" data-n="' + n + '">' + n + " participants</button>"; }).join("") + '</div><p class="notice">Choisissez le nombre de personnes de votre groupe.</p></div>' +
       "<h2>Je démarre ma chaîne avec…</h2>" + sits +
       '<p class="notice">Vous avez reçu un QR code ? Ne le scannez pas ici : ouvrez l\'appareil photo de votre téléphone.</p>' +
