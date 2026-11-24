@@ -3273,10 +3273,11 @@ DATA.discussion = [
   /* ---------- station 4 : bilan ---------- */
   function s4() {
     var good = 0; DATA.cartes.forEach(function (c, i) { var a = ST.s1.a[i]; if (a && a.pile === c.pile && (c.pile !== "A" || a.quand === c.quand)) good++; });
-    page("Bilan", '<h1>Station 4 : bilan</h1>' + mode("chacun", ["Chacun écrit <b>seul</b> les deux phrases ci-dessous (3 minutes).", "Ensuite, <b>ensemble</b>, vous les lisez à voix haute, puis vous répondez à la question de clôture."]) +
+    page("Bilan", '<h1>Station 4 : bilan</h1>' + mode("chacun", ["Chacun écrit <b>seul</b> les deux phrases ci-dessous (3 minutes).", "Ensuite, <b>ensemble</b>, vous les lisez à voix haute, puis vous répondez à la question de clôture.", "Enfin, <b>chacun</b> fait le bilan en ligne sur son téléphone (5 minutes)."]) +
       '<label for="j"><b>Une phrase vraie que vous avez transmise pendant la chaîne, ou que vous diriez maintenant</b></label><textarea id="j" data-act="s4txt" data-f="juste" style="min-height:90px">' + esc(ST.s4.juste) + "</textarea>" +
       '<label for="f"><b>Une phrase floue que vous ne direz plus</b></label><textarea id="f" data-act="s4txt" data-f="flou" style="min-height:90px">' + esc(ST.s4.flou) + "</textarea>" +
       '<div class="card teal"><b>👥 Ensemble, à voix haute : question de clôture</b><p>Quelle question de l\'IDE vous a le plus surpris pendant la chaîne, et que feriez-vous pour y répondre avant qu\'elle la pose ?</p></div>' +
+      '<div class="card orange"><b>📱 Chacun, sur son téléphone : le bilan en ligne (5 minutes)</b><p>Touchez le bouton. Choisissez un <b>pseudo</b> et un <b>code à 4 chiffres</b> : pas votre nom. Si on vous dit qu\'il n\'y a pas de test de départ, touchez « Faire le test quand même ».</p><a class="btn" href="https://victorious-smoke-0d8b5e503.4.azurestaticapps.net/t?c=825474&p=post" target="_blank" rel="noopener">Faire le bilan en ligne</a></div>' +
       '<button class="btn" data-act="s4copy">Copier mon bilan</button><button class="btn orange" data-act="s4fin">Terminer la séance</button>', { timer: "s4" });
   }
 
