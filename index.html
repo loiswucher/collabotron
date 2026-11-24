@@ -2581,6 +2581,44 @@ DATA.situations = [
     parasite: "La coiffeuse qui passe jeudi",
     prescription: "Boissons et repas en position bien assise et droite. Texture adaptée aux repas jusqu'à demain. Notez ce qu'elle mange et boit à chaque repas. Je la revois demain matin.",
     prescription2: "Complément : je demande une évaluation de la déglutition par l'orthophoniste demain matin. D'ici là, elle ne boit plus seule, toujours accompagnée. Notez toute toux pendant les prises.",
+    arbre: {
+      kw: {
+        TOUX: { label: "une toux", re: /touss|toux/ },
+        VOIX: { label: "une voix qui gargouille", re: /gargouil|voix/ },
+        BOISSON: { label: "une prise de boisson", re: /boire|boit|\beau\b|verre|prise|gorgee|boisson/ },
+        REPAS: { label: "le repas de midi", re: /viande|ne passe pas|moitie|repas|mange|dejeuner/ },
+        ANTECEDENT: { label: "l'incertitude sur hier", re: /ne sais pas|hier|deja|jamais|inconnu/ }
+      },
+      step2: [
+        { si: function (f) { return f.TOUX && f.BOISSON && (f.VOIX || f.REPAS); },
+          txt: "Suspicion de fausse route. Plus de boisson ordinaire : eau gélifiée ou épaissie. Repas en texture adaptée, bien assise et droite, avec quelqu'un à côté. Vous surveillez la température et l'encombrement. Je la revois demain matin.",
+          plus: function (f) { return f.ANTECEDENT ? " Notez que l'antériorité est inconnue, je la demanderai à l'équipe du matin." : " A-t-elle déjà toussé hier ? Regardez dans les transmissions."; },
+          cles: ["Eau gélifiée ou épaissie, plus de boisson ordinaire", "Repas en texture adaptée", "Bien assise et droite, avec quelqu'un à côté", "Surveiller la température et l'encombrement", "Le médecin la revoit demain matin"] },
+        { si: function (f) { return f.TOUX && f.BOISSON; },
+          txt: "Toux en buvant : assise droite, petites gorgées, avec une présence. Vous notez ce qui se passe. Je rappelle demain.",
+          cles: ["Assise droite, petites gorgées, avec une présence", "Noter ce qui se passe", "Le médecin rappelle demain"] },
+        { si: function (f) { return f.TOUX || f.VOIX; },
+          txt: "Je ne peux pas conclure. Quand a-t-elle toussé, pendant quoi ? Rappelez-moi.",
+          cles: ["Rappeler le médecin en précisant quand et pendant quoi elle a toussé"] },
+        { si: function (f) { return f.REPAS; },
+          txt: "Elle mange moins, sans autre signe. Proposez des collations, notez ce qu'elle mange. Je revois demain.",
+          cles: ["Proposer des collations", "Noter ce qu'elle mange", "Le médecin revoit demain"] },
+        { si: function () { return true; },
+          txt: "Pas d'inquiétude, surveillance habituelle.",
+          cles: ["Surveillance habituelle"] }
+      ],
+      step4: [
+        { si: function (f) { return f.TOUX && f.BOISSON; },
+          txt: "Elle a maintenant 38,2 °C et un encombrement. Suspicion de pneumopathie d'inhalation. Radio pulmonaire, elle reste à jeun, je la revois dans l'heure.",
+          cles: ["38,2 °C et encombrement : suspicion de pneumopathie d'inhalation", "Radio pulmonaire", "Elle reste à jeun", "Le médecin la revoit dans l'heure"] },
+        { si: function (f) { return f.TOUX || f.VOIX; },
+          txt: "Je demande un bilan de déglutition par l'orthophoniste demain. Boissons épaissies par précaution.",
+          cles: ["Bilan de déglutition par l'orthophoniste demain", "Boissons épaissies par précaution"] },
+        { si: function () { return true; },
+          txt: "Pas de changement. Je note sans particularité.",
+          cles: ["Pas de changement, sans particularité"] }
+      ]
+    },
     clesRx2: ["Évaluation de la déglutition par l'orthophoniste demain matin", "Ne plus la laisser boire seule, toujours accompagnée", "Noter toute toux pendant les prises"],
     clesRx: [
       "Boissons et repas en position bien assise et droite",
