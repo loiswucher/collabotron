@@ -2520,6 +2520,40 @@ DATA.situations = [
     parasite: "La télé de la chambre qui ne marche plus",
     prescription: "Surveillez la douleur et la marche. Ne le levez pas seul aujourd'hui. Proposez-lui à boire toutes les 2 heures. Je passe le voir en fin de matinée.",
     prescription2: "Complément : il part passer une radio de la hanche à 14 h. Prévenez le brancardier : il ne doit pas se lever seul. Notez l'heure et l'intensité de sa douleur avant le départ.",
+    arbre: {
+      kw: {
+        CHUTE: { label: "une chute", re: /chute|chuter|tomb|par terre|salle de bain/ },
+        DOULEUR: { label: "une douleur à la hanche", re: /hanche|douleur|\bmal\b|ca tire|grimac|\beva\b|echelle|\d\s*\/\s*10/, raw: /\bEN\s*[:=]?\s*\d/ },
+        MARCHE: { label: "un trouble de la marche", re: /trainant|traine|boit|boite|march|deambulateur|jambe/ },
+        SOURCE: { label: "la source de l'information", re: /\bfille\b|selon|d'apres|rapporte|famille|elle dit|il dit/ }
+      },
+      step2: [
+        { si: function (f) { return f.CHUTE && (f.DOULEUR || f.MARCHE); },
+          txt: "Chute possible, hanche douloureuse, marche modifiée : je suspecte une fracture. Il reste au lit, on ne le lève pas. Radio de la hanche aujourd'hui. Antalgique à heure fixe. Je viens dans l'heure.",
+          plus: function (f) { return f.SOURCE ? " Je demande à la famille de me rappeler." : " Qui l'a vu tomber ? Vérifiez dans le dossier."; },
+          cles: ["Il reste au lit, on ne le lève pas", "Radio de la hanche aujourd'hui", "Antalgique à heure fixe", "Le médecin vient dans l'heure"] },
+        { si: function (f) { return f.DOULEUR && f.MARCHE; },
+          txt: "Douleur de hanche sans cause connue. On ne le lève pas seul, antalgique, vous surveillez. Je passe en fin de matinée. Cherchez dans le dossier s'il y a eu un événement.",
+          cles: ["Ne pas le lever seul", "Antalgique, surveillance", "Le médecin passe en fin de matinée", "Chercher dans le dossier s'il y a eu un événement"] },
+        { si: function (f) { return f.DOULEUR || f.MARCHE; },
+          txt: "Je ne peux pas conclure. Rappelez-moi quand vous aurez regardé comment il marche et où il a mal.",
+          cles: ["Rappeler le médecin après avoir observé la marche et la douleur"] },
+        { si: function () { return true; },
+          txt: "Pas d'inquiétude. Surveillance habituelle, je repasse demain.",
+          cles: ["Surveillance habituelle", "Le médecin repasse demain"] }
+      ],
+      step4: [
+        { si: function (f) { return f.CHUTE && f.DOULEUR; },
+          txt: "La radio montre une fracture du col du fémur. Transfert aux urgences. À jeun dès maintenant, dossier prêt, famille prévenue.",
+          cles: ["Fracture du col du fémur : transfert aux urgences", "À jeun dès maintenant", "Dossier prêt, famille prévenue"] },
+        { si: function (f) { return f.DOULEUR; },
+          txt: "Le traitement ne suffit pas. Je demande une radio demain matin. Il reste au lit.",
+          cles: ["Radio demain matin", "Il reste au lit"] },
+        { si: function () { return true; },
+          txt: "Pas de changement. Je note sans particularité.",
+          cles: ["Pas de changement, sans particularité"] }
+      ]
+    },
     clesRx2: ["Radio de la hanche à 14 h", "Prévenir le brancardier : il ne doit pas se lever seul", "Noter l'heure et l'intensité de la douleur avant le départ"],
     clesRx: [
       "Ne pas le lever seul aujourd'hui",
@@ -2894,6 +2928,30 @@ DATA.discussion = [
     if (p % 2 === 0) return "IDE";
     return "AS qui prend la relève";
   }
+  function norm(t) { return String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/’/g, "'"); }
+  /* arbre décisionnel du médecin : step = 2 ou 4, msg = message reçu par l'IDE */
+  function docBranch(s, step, msg) {
+    if (!s.arbre) return null;
+    var t = norm(msg), f = {}, ret = [];
+    Object.keys(s.arbre.kw).forEach(function (k) {
+      var kw = s.arbre.kw[k];
+      f[k] = kw.re.test(t) || !!(kw.raw && kw.raw.test(String(msg || "")));
+      if (f[k]) ret.push(kw.label);
+    });
+    var list = step === 2 ? s.arbre.step2 : s.arbre.step4, b = null, idx = 0;
+    for (var i = 0; i < list.length; i++) if (list[i].si(f)) { b = list[i]; idx = i; break; }
+    return { txt: b.txt + (b.plus ? b.plus(f) : ""), cles: b.cles, ret: ret, idx: idx, n: list.length };
+  }
+  function rxText(s, p, msg) {
+    var br = docBranch(s, p >= 4 ? 4 : 2, msg);
+    if (!br) return "« " + esc(p >= 4 ? s.prescription2 : s.prescription) + " »";
+    return '<i>Ce que le médecin a retenu de votre appel : ' + (br.ret.length ? esc(br.ret.join(", ")) : "presque rien") + ".</i><br>« " + esc(br.txt) + " »";
+  }
+  function rxList(s, step, msgs) {
+    var br = docBranch(s, step, step === 2 ? msgs[0] : msgs[2]);
+    if (br) return br.cles;
+    return step === 2 ? s.clesRx : s.clesRx2;
+  }
   var drRevealed = false;
   async function chainView(code) {
     page("Chaîne", '<p class="mute">Lecture du message…</p>');
@@ -2926,7 +2984,7 @@ DATA.discussion = [
           body += '<button class="btn orange" data-act="callDr">Appeler le médecin</button>';
           ready = false;
         } else {
-          body += '<div class="card orange"><b>' + (p >= 4 ? "Le médecin vous rappelle et complète sa prescription :" : "Le médecin vous répond :") + '</b><br>« ' + esc(p >= 4 ? s.prescription2 : s.prescription) + ' »<p class="notice">Prescription fictive, à visée pédagogique.</p></div>';
+          body += '<div class="card orange"><b>' + (p >= 4 ? "Le médecin vous rappelle et complète sa prescription :" : "Le médecin vous répond :") + '</b><br>' + rxText(s, p, prev) + '<p class="notice">Prescription fictive, à visée pédagogique.</p></div>';
         }
         prompt = "Votre transmission à l'AS qui prend la relève";
         hint = p >= 4 ? "Dites ce que vous avez compris de la situation, ce que le médecin avait déjà prescrit et son complément." : "Dites ce que vous avez compris de la situation et ce que le médecin a prescrit.";
@@ -2980,6 +3038,18 @@ DATA.discussion = [
   var SYM = { "": "·", ok: "✓", def: "≈", no: "✗" };
   function mxLoad() { try { mx = JSON.parse(ss(chainKey + ".mx") || "{}"); } catch (e) { mx = {}; } mx.g = mx.g || {}; mx.add = mx.add || {}; }
   function mxSave() { ss(chainKey + ".mx", JSON.stringify(mx)); }
+  function decisions(s, n) {
+    var m = chain.m;
+    if (!s.arbre) return "« " + esc(s.prescription) + " »" + (n >= 4 ? "<p><b>Second appel :</b> « " + esc(s.prescription2) + " »</p>" : "");
+    var out = "", full = [[2, m[0]], [4, m[2]]];
+    full.forEach(function (x) {
+      if (x[0] === 4 && n < 4) return;
+      var br = docBranch(s, x[0], x[1]), best = (x[0] === 2 ? s.arbre.step2 : s.arbre.step4)[0];
+      out += "<p><b>" + (x[0] === 2 ? "Premier appel" : "Second appel") + " :</b> « " + esc(br.txt) + " »<br><small>Retenu par le médecin : " + (br.ret.length ? esc(br.ret.join(", ")) : "presque rien") + ".</small>" +
+        (br.idx > 0 ? "<br><small><b>Avec toutes les informations utiles, il aurait dit :</b> « " + esc(best.txt) + " »</small>" : "") + "</p>";
+    });
+    return out;
+  }
   function reveal() {
     var s = sit(chain.s), n = chain.n; mxLoad();
     var hops = []; for (var i = 1; i <= n; i++) hops.push(i);
@@ -2995,8 +3065,8 @@ DATA.discussion = [
       return '<tr><td class="k">' + esc(txt) + (parasite ? ' <span class="pill orange">hors sujet</span>' : "") + (rx ? ' <span class="pill">prescription</span>' : "") + "</td>" + cells + "</tr>";
     }
     var rows = s.cles.map(function (c, i) { return rowFor(c, "c" + i, false); }).join("") +
-      s.clesRx.map(function (c, i) { return rowFor(c, "r" + i, true); }).join("") +
-      (n >= 4 ? s.clesRx2.map(function (c, i) { return rowFor(c, "q" + i, true); }).join("") : "") +
+      rxList(s, 2, chain.m).map(function (c, i) { return rowFor(c, "r" + i, true); }).join("") +
+      (n >= 4 ? rxList(s, 4, chain.m).map(function (c, i) { return rowFor(c, "q" + i, true); }).join("") : "") +
       rowFor(s.parasite, "p0", false, true);
     var msgs = chain.m.map(function (m, i) { return '<div class="msg"><small>Participant ' + (i + 1) + " · " + esc(roleLabel(i + 1, n)) + "</small>" + nl(m) + "</div>"; }).join("");
     var counters = hops.map(function (h) {
@@ -3009,7 +3079,7 @@ DATA.discussion = [
       "Répondez aux 3 questions de discussion, à voix haute.",
       "Quand vous avez fini, prenez le téléphone d'un autre pour la révélation suivante."]) + "<h1>La révélation</h1><p><b>Situation " + s.id + " : " + esc(s.titre) + "</b></p>" +
       "<h2>Ce que l'AS savait au départ</h2><div class=\"card teal\"><ul class=\"clean\">" + s.fiche.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></div>" +
-      "<h2>Ce que le médecin a prescrit</h2><div class=\"card orange\">« " + esc(s.prescription) + " »" + (n >= 4 ? "<p><b>Second appel :</b> « " + esc(s.prescription2) + " »</p>" : "") + "</div>" +
+      "<h2>Ce que le médecin a décidé</h2><div class=\"card orange\">" + decisions(s, n) + "</div>" +
       "<h2>La chaîne, participant par participant</h2>" + msgs +
       "<h2>Analyse</h2><p>Pour chaque élément et chaque participant, touchez la case pour indiquer ce que contient le message.</p>" +
       '<p class="legend"><span><b>✓</b> bien transmis</span><span><b>≈</b> déformé</span><span><b>✗</b> perdu</span><span><b>·</b> pas évalué</span></p>' +
@@ -3024,7 +3094,7 @@ DATA.discussion = [
   }
   function summary() {
     var s = sit(chain.s), n = chain.n, out = [];
-    var keys = s.cles.map(function (_, i) { return "c" + i; }).concat(s.clesRx.map(function (_, i) { return "r" + i; })).concat(n >= 4 ? s.clesRx2.map(function (_, i) { return "q" + i; }) : []);
+    var keys = s.cles.map(function (_, i) { return "c" + i; }).concat(rxList(s, 2, chain.m).map(function (_, i) { return "r" + i; })).concat(n >= 4 ? rxList(s, 4, chain.m).map(function (_, i) { return "q" + i; }) : []);
     for (var h = 1; h <= n; h++) {
       var ok = 0, def = 0, no = 0, tot = 0;
       keys.forEach(function (k) {
