@@ -2770,7 +2770,8 @@ DATA.situations = [
     fiche: [
       "À 10 h, sa température mesurée est de 38,4 °C.",
       "À 9 h 30, il vous a dit avoir eu des frissons et a demandé une couverture.",
-      "Il a uriné deux fois ce matin, urines foncées.",
+      "Il a uriné deux fois ce matin, urines foncées. Il dit que ça brûle quand il urine : EN 4 sur 10.",
+      "Son pouls est à 98 par minute.",
       "Il a bu un demi-verre d'eau depuis le matin.",
       "Son fils voudrait déplacer sa visite à demain."
     ],
@@ -2778,11 +2779,53 @@ DATA.situations = [
       "Température de 38,4 °C à 10 h",
       "Frissons à 9 h 30, dits par le patient",
       "Deux mictions ce matin, urines foncées",
+      "Brûlures en urinant, dites par le patient, EN 4 sur 10",
+      "Pouls à 98 par minute",
       "Un demi-verre d'eau bu depuis le matin"
     ],
     parasite: "La visite du fils déplacée à demain",
-    prescription: "Prenez sa température toutes les 4 heures et notez-la. Proposez-lui à boire toutes les heures, en quantité. Prévenez-moi si elle dépasse 39 °C ou s'il a des frissons importants. Je repasse en début d'après-midi.",
+    prescription: "Prenez sa température toutes les 4 heures et notez-la. Proposez-lui à boire toutes les heures, en quantité. Prévenez-moi si elle dépasse 38,5 °C ou s'il a des frissons importants. Je repasse en début d'après-midi.",
     prescription2: "Complément : une prise de sang sera faite demain matin, à jeun. Découvrez-le légèrement, sans le laisser frissonner. Notez ses urines de la journée.",
+    arbre: {
+      kw: {
+        FIEVRE: { label: "la fièvre", re: /38|temperature|fievre|febrile/ },
+        FRISSONS: { label: "les frissons", re: /frisson|couverture/ },
+        URINES: { label: "les urines foncées", re: /urin|miction|foncee/ },
+        DOULEUR: { label: "les brûlures en urinant", re: /brule|\bmal\b|douleur|\beva\b|\d\s*\/\s*10/, raw: /\bEN\s*[:=]?\s*\d/ },
+        BOISSON: { label: "les boissons", re: /demi.?verre|boire|boit|\bbu\b|boisson|hydrat/ },
+        POULS: { label: "le pouls", re: /pouls|frequence|\b98\b/ },
+        SOURCE: { label: "la source de l'information", re: /il dit|il m'a dit|il se plaint|selon lui|rapporte|dit par/ }
+      },
+      step2: [
+        { si: function (f) { return f.FIEVRE && f.FRISSONS && (f.URINES || f.DOULEUR); },
+          txt: "Fièvre, frissons, urines foncées, brûlures : je suspecte une infection urinaire. Température toutes les 4 heures, boissons toutes les heures en quantité, bandelette urinaire. Prévenez-moi s'il dépasse 38,5 °C ou s'il a des frissons importants. Je repasse en début d'après-midi.",
+          plus: function (f) { return (f.POULS ? "" : " Quel est son pouls ?") + (f.SOURCE ? "" : " Les frissons, vous les avez vus ou il vous les a rapportés ?"); },
+          cles: ["Température toutes les 4 heures, notée", "Boissons toutes les heures, en quantité", "Bandelette urinaire", "Prévenir si plus de 38,5 °C ou frissons importants", "Le médecin repasse en début d'après-midi"] },
+        { si: function (f) { return f.FIEVRE && (f.FRISSONS || f.URINES || f.BOISSON || f.DOULEUR); },
+          txt: "Il a de la fièvre. Température toutes les 4 heures, boissons régulières. Rappelez-moi s'il frissonne ou si ses urines changent. Je repasse en début d'après-midi.",
+          cles: ["Température toutes les 4 heures", "Boissons régulières", "Rappeler s'il frissonne ou si les urines changent", "Le médecin repasse en début d'après-midi"] },
+        { si: function (f) { return f.FIEVRE; },
+          txt: "Je ne peux pas conclure. Quels autres signes : pouls, urines, frissons ? Rappelez-moi.",
+          cles: ["Chercher les autres signes (pouls, urines, frissons), puis rappeler le médecin"] },
+        { si: function (f) { return f.FRISSONS || f.URINES || f.DOULEUR; },
+          txt: "Sans température, je ne peux pas conclure. Prenez-la et rappelez-moi.",
+          cles: ["Prendre la température, puis rappeler le médecin"] },
+        { si: function () { return true; },
+          txt: "Pas d'inquiétude, surveillance habituelle.",
+          cles: ["Surveillance habituelle"] }
+      ],
+      step4: [
+        { si: function (f) { return f.FIEVRE && f.FRISSONS && f.URINES; },
+          txt: "Le bilan confirme une infection urinaire : antibiotiques débutés. Température et pouls toutes les 4 heures, boissons en quantité, vous notez ses urines de la journée.",
+          cles: ["Infection urinaire confirmée, antibiotiques débutés", "Température et pouls toutes les 4 heures", "Boissons en quantité", "Noter ses urines de la journée"] },
+        { si: function (f) { return f.FIEVRE; },
+          txt: "Je demande une prise de sang demain matin, à jeun. Continuez la température toutes les 4 heures.",
+          cles: ["Prise de sang demain matin, à jeun", "Température toutes les 4 heures"] },
+        { si: function () { return true; },
+          txt: "Pas de changement. Je note sans particularité.",
+          cles: ["Pas de changement, sans particularité"] }
+      ]
+    },
     clesRx2: ["Prise de sang demain matin, à jeun", "Le découvrir légèrement, sans le laisser frissonner", "Noter ses urines de la journée"],
     clesRx: [
       "Température toutes les 4 heures, notée",
