@@ -2646,6 +2646,45 @@ DATA.situations = [
     parasite: "Le fauteuil laissé dans le couloir",
     prescription: "Ne le forcez pas pour la toilette ce matin, reproposez-la plus tard. Restez un moment avec lui et proposez-lui à boire régulièrement. Prévenez-moi tout de suite s'il redit des choses de ce genre. Je passe le voir cet après-midi.",
     prescription2: "Complément : je demande la visite de la psychologue de l'équipe demain. Ne le laissez pas seul trop longtemps. Notez ce qu'il dit et à quelle heure.",
+    note: "Cette situation évoque des idées noires. Si elle vous touche, ne craignez pas de nous déranger pour en parler : nous nous rendrons disponibles.",
+    arbre: {
+      kw: {
+        PROPOS: { label: "les propos du patient", re: /sert plus|a rien|plus envie|plus rien/ },
+        REPLI: { label: "le retrait", re: /face au mur|un seul mot|plaisant|ne parle|mutique|repli|retrait/ },
+        REFUS: { label: "le refus de la toilette", re: /refus|toilette/ },
+        ALIM: { label: "l'alimentation", re: /petit.?dejeuner|intact|demi.?verre|boire|boit|mange|plateau/ },
+        CONTEXTE: { label: "le départ du voisin", re: /voisin|parti|depart/ }
+      },
+      step2: [
+        { si: function (f) { return f.PROPOS && (f.REPLI || f.REFUS || f.ALIM); },
+          txt: "Propos de découragement, retrait, refus de soins : je prends ça au sérieux. Ne le forcez pas, ne le laissez pas seul trop longtemps, restez avec lui et proposez à boire. Je passe le voir dans l'heure et je demande la psychologue. Prévenez-moi tout de suite s'il redit des choses de ce genre.",
+          plus: function (f) { return f.CONTEXTE ? " Le départ de son voisin peut compter, je le note." : " Y a-t-il eu un événement récent ? Regardez dans le dossier."; },
+          cles: ["Ne pas le forcer, ne pas le laisser seul trop longtemps", "Rester avec lui, proposer à boire", "Le médecin passe dans l'heure et demande la psychologue", "Prévenir tout de suite s'il redit des choses de ce genre"] },
+        { si: function (f) { return f.REPLI && (f.REFUS || f.ALIM); },
+          txt: "Il est en retrait. Ne le forcez pas pour la toilette, reproposez-la plus tard, restez un moment avec lui, proposez à boire. Je passe cet après-midi. Que dit-il exactement ? Rappelez-moi s'il parle.",
+          cles: ["Ne pas le forcer pour la toilette, la reproposer plus tard", "Rester un moment avec lui, proposer à boire", "Le médecin passe cet après-midi", "Rappeler le médecin s'il parle"] },
+        { si: function (f) { return f.PROPOS; },
+          txt: "Ces mots m'inquiètent, mais il me manque des éléments. Restez avec lui, je passe dans l'heure. Dites-moi comment il se comporte.",
+          cles: ["Rester avec lui", "Le médecin passe dans l'heure", "Rapporter son comportement au médecin"] },
+        { si: function (f) { return f.REPLI || f.REFUS || f.ALIM; },
+          txt: "Je ne peux pas conclure. Passez un moment avec lui et rappelez-moi.",
+          cles: ["Passer un moment avec lui, puis rappeler le médecin"] },
+        { si: function () { return true; },
+          txt: "Pas d'inquiétude, surveillance habituelle.",
+          cles: ["Surveillance habituelle"] }
+      ],
+      step4: [
+        { si: function (f) { return f.PROPOS; },
+          txt: "Je l'ai vu : épisode dépressif probable. La psychologue passe aujourd'hui. Surveillance rapprochée, il n'est pas laissé seul longtemps. Prévenez-moi immédiatement s'il redit ces phrases.",
+          cles: ["Épisode dépressif probable", "La psychologue passe aujourd'hui", "Surveillance rapprochée, pas laissé seul longtemps", "Prévenir immédiatement s'il redit ces phrases"] },
+        { si: function (f) { return f.REPLI || f.REFUS || f.ALIM; },
+          txt: "Je demande la visite de la psychologue demain. Restez avec lui, notez ce qu'il dit et à quelle heure.",
+          cles: ["Visite de la psychologue demain", "Rester avec lui, noter ce qu'il dit et à quelle heure"] },
+        { si: function () { return true; },
+          txt: "Pas de changement. Je note sans particularité.",
+          cles: ["Pas de changement, sans particularité"] }
+      ]
+    },
     clesRx2: ["Visite de la psychologue demain", "Ne pas le laisser seul trop longtemps", "Noter ce qu'il dit et à quelle heure"],
     clesRx: [
       "Ne pas le forcer pour la toilette, la reproposer plus tard",
@@ -3007,7 +3046,7 @@ DATA.discussion = [
     var s = sit(chain.s), n = chain.n, role = roleOf(p);
     var draft = ss(chainKey + ".d") || "";
     var head = '<span class="pill">Participant ' + p + " sur " + n + '</span> <span class="pill orange">' + esc(roleLabel(p, n)) + "</span>";
-    var body = modeBar("chacun") + "<h1>Vous êtes : " + (role === "AS" ? "AS" : "IDE") + "</h1><p>" + head + "</p>";
+    var body = modeBar("chacun") + "<h1>Vous êtes : " + (role === "AS" ? "AS" : "IDE") + "</h1><p>" + head + "</p>" + (s.note ? '<div class="card olive"><small>' + esc(s.note) + "</small></div>" : "");
     var prompt, hint, ready = true;
     if (p === 1) {
       body += '<div class="card teal"><p>' + esc(s.contexte) + "</p><ul class=\"clean\">" + s.fiche.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></div>";
@@ -3115,7 +3154,7 @@ DATA.discussion = [
       "Lisez à voix haute les faits d'origine, puis les messages, un par un.",
       "Remplissez le tableau <b>ensemble</b> : touchez une case seulement quand le groupe est d'accord.",
       "Répondez aux 3 questions de discussion, à voix haute.",
-      "Quand vous avez fini, prenez le téléphone d'un autre pour la révélation suivante."]) + "<h1>La révélation</h1><p><b>Situation " + s.id + " : " + esc(s.titre) + "</b></p>" +
+      "Quand vous avez fini, prenez le téléphone d'un autre pour la révélation suivante."]) + (s.note ? '<div class="card olive"><small>' + esc(s.note) + "</small></div>" : "") + "<h1>La révélation</h1><p><b>Situation " + s.id + " : " + esc(s.titre) + "</b></p>" +
       "<h2>Ce que l'AS savait au départ</h2><div class=\"card teal\"><ul class=\"clean\">" + s.fiche.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></div>" +
       "<h2>Ce que le médecin a décidé</h2><div class=\"card orange\">" + decisions(s, n) + "</div>" +
       "<h2>La chaîne, participant par participant</h2>" + msgs +
