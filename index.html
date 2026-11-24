@@ -107,6 +107,12 @@ blockquote{margin:6px 0;padding:6px 12px;border-left:4px solid var(--olive);back
 .modebar.tous{background:#E4EEFB;color:#1F57A0;border:1px solid #2F6FBF}
 .modebar.chacun{background:var(--orange-l);color:#B44F12;border:1px solid var(--orange)}
 .station .t .pill{margin-top:4px}
+
+.card.station.cur{border:2px solid var(--orange);background:#FFF9F4}
+.card.station.lock{opacity:.55}
+.card.station.lock .num{background:#9AA9AA;font-size:15px}
+.card.station .here{align-self:flex-start;background:var(--orange);color:#fff;font-weight:700;font-size:12px;border-radius:999px;padding:1px 10px}
+.btn.big{font-size:19px;padding:18px 16px;background:var(--orange)}
 </style></head>
 <body><div id="app"></div>
 <script>//---------------------------------------------------------------------
@@ -2646,7 +2652,7 @@ DATA.discussion = [
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.v === 1) return s; } catch (e) {}
     return { v: 1, s1: { i: 0, a: [] }, s2: { i: -1, a: [] }, s3: { done: false }, s4: { juste: "", flou: "" }, t: {} };
   }
-  var ST = loadState();
+  var ST = loadState(); ST.prog = ST.prog || 0; var homeNoteAt = 0;
   function save() { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} }
 
   /* petit stockage de brouillons pour la chaîne (session) */
@@ -2728,20 +2734,24 @@ DATA.discussion = [
     { k: "s3", n: 3, t: "La chaîne", d: "Transmettre en chaîne de téléphone en téléphone (QR code)", m: 70, mode: "📱 CHACUN, puis 👥 ENSEMBLE pour chaque révélation" },
     { k: "s4", n: 4, t: "Bilan", d: "Ce que vous retenez, à copier ou à garder", m: 15, mode: "📱 CHACUN, puis 👥 ENSEMBLE" }
   ];
-  function isDone(k) {
-    if (k === "s1") return ST.s1.a.length >= DATA.cartes.length;
-    if (k === "s2") return ST.s2.i >= 7;
-    if (k === "s3") return !!ST.s3.done;
-    if (k === "s4") return !!ST.s4.fin;
-    return false;
-  }
+  var ORDER = { s1: 0, s2: 1, s3: 2, s4: 3 };
   function home() {
-    var rows = STATIONS.map(function (s) {
-      return '<div class="card"><a class="station' + (isDone(s.k) ? " done" : "") + '" href="#/' + s.k + '"><span class="num">' + (isDone(s.k) ? "✓" : s.n) + '</span><span class="t"><b>' + esc(s.t) + " · " + s.m + ' min</b><span class="mute">' + esc(s.d) + '</span><span class="pill">' + esc(s.mode) + "</span></span></a></div>";
+    var prog = ST.prog || 0, cur = STATIONS[prog];
+    var rows = STATIONS.map(function (s, i) {
+      var st = i < prog ? "done" : (i === prog ? "cur" : "lock");
+      var head = '<span class="num">' + (st === "done" ? "✓" : (st === "lock" ? "🔒" : s.n)) + "</span>";
+      var t = '<span class="t"><b>' + esc(s.t) + " · " + s.m + ' min</b><span class="mute">' + esc(s.d) + '</span><span class="pill">' + esc(s.mode) + "</span></span>";
+      return '<div class="card station ' + st + '">' + head + t + (st === "cur" ? '<span class="here">En cours</span>' : "") + "</div>";
     }).join("");
-    page("", '<h1>Transmettre juste</h1><p>Durée : 2 h 30, en autonomie. Le but : que ce que vous dites à l\'IDE soit fidèle à ce que vous avez vu, utile, et dit au bon moment.</p>' +
-      '<div class="card teal"><b>Avant de commencer</b><ul class="clean"><li>Installez-vous par groupes de <b>4</b>, en cercle, chacun avec son téléphone chargé.</li><li>Deux façons de travailler, indiquées en haut de chaque écran : <b>👥 ENSEMBLE</b> (un seul téléphone au centre) ou <b>📱 CHACUN</b> (votre téléphone, sans regarder celui des autres).</li><li>Gardez votre position dans le groupe. Un chronomètre vous indique le temps conseillé, sans bloquer quoi que ce soit.</li><li>Rien n\'est enregistré en dehors de votre téléphone.</li></ul></div>' +
-      rows +
+    var note = (Date.now() - homeNoteAt < 4000) ? '<div class="card orange">Cette station n\'est pas encore ouverte. Terminez d\'abord la station en cours, tous ensemble.</div>' : "";
+    var started = prog > 0 || !!ST.t.s1;
+    var action;
+    if (!cur) action = '<div class="card ok"><b>Séance terminée.</b> Merci pour votre travail.</div>';
+    else action = '<a class="btn big" href="#/' + cur.k + '">' + (started ? "Continuer l'activité" : "Démarrer l'activité") + "</a>" +
+      '<p class="notice">Station ' + cur.n + " en cours. " + (cur.k === "s1" ? "Un seul téléphone du groupe sert à cette station. Les autres posent le leur, puis touchent « Passer à la suite » quand le groupe a terminé." : "Quand votre groupe a terminé cette station, vous passez à la suite depuis la fin de la station, ou ici.") + '</p><button class="btn ghost" data-act="skip">Notre groupe a terminé : passer à la suite</button>';
+    page("", '<h1>Transmettre juste</h1><p>Séance en autonomie · 2 h 30. Le but : que ce que vous dites à l\'IDE soit fidèle à ce que vous avez vu, utile, et dit au bon moment.</p>' +
+      '<div class="card teal"><b>Avant de commencer</b><ul class="clean"><li>Installez-vous par groupes de <b>4</b>, en cercle, chacun avec son téléphone chargé.</li><li>Deux façons de travailler, indiquées en haut de chaque écran : <b>👥 ENSEMBLE</b> (un seul téléphone au centre) ou <b>📱 CHACUN</b> (votre téléphone, sans regarder celui des autres).</li><li>Les stations s\'ouvrent <b>une par une</b>, dans l\'ordre. Gardez votre position dans le groupe et avancez ensemble.</li><li>Rien n\'est enregistré en dehors de votre téléphone.</li></ul></div>' +
+      note + "<h2>Le plan</h2>" + rows + action +
       '<p class="notice"><a href="#/formateur">Page formateur</a> · <a href="#/affiche">Page de garde</a> · <a href="#" data-act="reset">Effacer mes réponses</a></p>');
   }
 
@@ -2799,7 +2809,7 @@ DATA.discussion = [
       '<p>Reprenez ensemble les cartes pour lesquelles vous avez hésité, même si votre réponse était bonne. Deux questions pour la discussion :</p><ul class="clean"><li>Qu\'est-ce qui distingue « il a crié quand je l\'ai tourné » de « il est agressif » ?</li><li>Quelles phrases floues entendez-vous le plus souvent en stage ?</li></ul>' +
       (miss.length ? "<h2>Les cartes à revoir</h2>" : "") + list +
       '<div class="card orange"><b>Changement de mode</b><p>Pour la station 2, <b>chacun reprend son téléphone</b> et touche « Station 2 » sur l\'accueil. Si l\'appli n\'est plus ouverte, scannez de nouveau le QR code projeté.</p></div>' +
-      '<a class="btn" href="#/s2">Station 2 : reformuler</a><a class="btn ghost" href="#" data-act="s1redo">Refaire le tri</a>';
+      '<button class="btn" data-act="goto" data-n="1" data-to="s2">Passer à la station 2 : reformuler</button><a class="btn ghost" href="#" data-act="s1redo">Refaire le tri</a>';
     page("Tri", body, { timer: "s1" });
   }
 
@@ -2843,7 +2853,7 @@ DATA.discussion = [
       '<div class="card teal"><b>Le test de l\'IDE</b><p>En écoutant cette phrase, puis-je :</p><ul class="clean"><li>la vérifier ?</li><li>la comparer à hier ?</li><li>décider quoi faire ?</li></ul><p>Dites à voix haute ce qui manque encore.</p></div>' +
       '<div class="card"><b>Pièges à repérer</b><ul class="clean"><li>« Confuse » remplacé par « désorientée » : le mot change, la conclusion reste.</li><li>Une phrase qui mélange trois informations : mieux vaut trois phrases courtes, dans l\'ordre d\'importance.</li><li>Des chiffres sans heure ni source : un chiffre sans contexte ne se vérifie pas non plus.</li></ul></div>' +
       '<div class="card orange"><b>Changement de mode</b><p>Pour la station 3, <b>chacun garde son propre téléphone</b>. Ne montrez plus votre écran à personne, sauf les QR codes.</p></div>' +
-      '<a class="btn" href="#/s3">Station 3 : la chaîne</a>', { timer: "s2" });
+      '<button class="btn" data-act="goto" data-n="2" data-to="s3">Passer à la station 3 : la chaîne</button>', { timer: "s2" });
   }
 
   /* ---------- station 3 : accueil de la chaîne ---------- */
@@ -2863,7 +2873,7 @@ DATA.discussion = [
       '<div class="card"><b>Longueur de la chaîne</b><div class="row" style="margin-top:6px">' + [3, 4, 5].map(function (n) { return '<button class="btn ' + (chainLen === n ? "" : "alt") + '" data-act="chainlen" data-n="' + n + '">' + n + " maillons</button>"; }).join("") + '</div><p class="notice">Gardez le nombre de personnes de votre groupe.</p></div>' +
       "<h2>Je démarre ma chaîne avec…</h2>" + sits +
       '<p class="notice">Vous avez reçu un QR code ? Ne le scannez pas ici : ouvrez l\'appareil photo de votre téléphone.</p>' +
-      '<button class="btn orange" data-act="s3done">Nous avons terminé les chaînes</button>', { timer: "s3" });
+      '<button class="btn orange" data-act="goto" data-n="3" data-to="s4">Nous avons terminé les chaînes : passer au bilan</button>', { timer: "s3" });
   }
 
   /* ---------- chaîne : écrans ---------- */
@@ -2880,6 +2890,7 @@ DATA.discussion = [
     try { chain = await decodeChain(code); } catch (e) {
       return page("Chaîne", '<div class="card bad"><b>Ce lien ne fonctionne pas.</b><p>' + (e.message === "nodecomp" ? "Votre navigateur est trop ancien pour lire ce message. Essayez avec un autre navigateur." : "Le QR code a peut-être été mal lu. Demandez à la personne de vous le montrer de nouveau, ou de vous envoyer le lien.") + '</p></div><a class="btn" href="' + esc(baseUrl()) + '#/s3">Retour à la station 3</a>');
     }
+    if ((ST.prog || 0) < 2) { ST.prog = 2; save(); }
     chainKey = "tm." + code.slice(0, 40) + code.length;
     drRevealed = ss(chainKey + ".dr") === "1";
     var p = chain.m.length + 1;
@@ -2995,7 +3006,7 @@ DATA.discussion = [
       "<h2>Ajouts qui ne figuraient pas dans les faits</h2><p class=\"mute\">Comptez, pour chaque maillon, les informations inventées ou supposées.</p>" + counters +
       "<h2>À discuter ensemble</h2><div class=\"card olive\"><ol class=\"clean\">" + DATA.discussion.map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("") + "</ol></div>" +
       '<button class="btn alt" data-act="showfinal">Afficher le QR de la révélation pour mon groupe</button><div id="finalqr"></div>' +
-      '<a class="btn" href="#/s3" data-act="s3done">Terminé, retour à la station 3</a>';
+      '<a class="btn" href="#/s3">Révélation terminée, retour à la station 3</a>';
     page("Révélation", body);
     summary();
   }
@@ -3031,7 +3042,7 @@ DATA.discussion = [
       '<div class="card"><b>Déroulé (2 h 30)</b><ul class="clean"><li>Station 1, le tri : 35 min</li><li>Station 2, reformuler : 30 min</li><li>Station 3, la chaîne : 70 min</li><li>Station 4, bilan : 15 min</li></ul><p class="notice">Les chronomètres sont indicatifs et ne bloquent rien.</p></div>' +
       '<div class="card"><b>Si le QR ne se scanne pas</b><ul class="clean"><li>Luminosité au maximum, écran propre, sans reflet.</li><li>Utiliser « Copier le lien » puis envoyer le lien par message.</li><li>Les messages sont limités à ' + MAXLEN + ' caractères pour que le QR reste lisible.</li></ul></div>' +
       '<div class="card"><b>Ce qui est évalué par les apprenants eux-mêmes</b><p>Le tri est corrigé automatiquement. Les reformulations et la révélation de la chaîne s\'analysent entre apprenants, avec des exemples et des questions de discussion intégrés.</p></div>' +
-      '<a class="btn" href="#/affiche">Afficher l\'affiche QR</a><a class="btn alt" href="#" data-act="reset">Effacer mes données sur cet appareil</a>');
+      '<a class="btn" href="#/affiche">Afficher l\'affiche QR</a><button class="btn alt" data-act="unlock">Débloquer toutes les stations sur cet appareil (test)</button><a class="btn alt" href="#" data-act="reset">Effacer mes données sur cet appareil</a>');
   }
   function hm(min) { var h = Math.floor(min / 60) % 24, m = min % 60; return h + " h " + (m < 10 ? "0" : "") + m; }
   function planHtml() {
@@ -3088,14 +3099,16 @@ DATA.discussion = [
       box.innerHTML += '<button class="btn alt" data-act="copy" data-url="' + esc(url) + '">Copier le lien</button>';
     },
     debut: function (el) { ST.debut = el.value; save(); var pl = $("#plan"); if (pl) pl.innerHTML = planHtml(); },
-    s3done: function () { ST.s3.done = true; save(); return true; },
+    goto: function (el) { ST.prog = Math.max(ST.prog || 0, +el.dataset.n); if (el.dataset.to === "s4") ST.s3.done = true; save(); location.hash = "#/" + el.dataset.to; },
+    unlock: function () { ST.prog = STATIONS.length; save(); location.hash = "#/"; },
+    skip: function () { if (confirm("Tout le groupe a-t-il terminé cette station ?")) { ST.prog = Math.min((ST.prog || 0) + 1, STATIONS.length); save(); home(); } },
     s4txt: function (el) { ST.s4[el.dataset.f] = el.value; save(); },
     s4copy: async function (el) {
       var good = 0; DATA.cartes.forEach(function (c, i) { var a = ST.s1.a[i]; if (a && a.pile === c.pile && (c.pile !== "A" || a.quand === c.quand)) good++; });
       var t = "Bilan : transmettre juste\nTri : " + good + "/" + DATA.cartes.length + "\nUne phrase vraie : " + (ST.s4.juste || "—") + "\nUne phrase floue que je ne dirai plus : " + (ST.s4.flou || "—");
       try { await navigator.clipboard.writeText(t); el.textContent = "Bilan copié"; } catch (e) { window.prompt("Copiez votre bilan :", t); }
     },
-    s4fin: function () { ST.s4.fin = true; save(); page("Bilan", '<div class="card ok"><b>Séance terminée.</b><p>Merci. Vos réponses restent sur votre téléphone. Vous pouvez effacer vos données depuis l\'accueil.</p></div><a class="btn" href="#/">Retour à l\'accueil</a>'); }
+    s4fin: function () { ST.s4.fin = true; ST.prog = STATIONS.length; save(); page("Bilan", '<div class="card ok"><b>Séance terminée.</b><p>Merci. Vos réponses restent sur votre téléphone. Vous pouvez effacer vos données depuis l\'accueil.</p></div><a class="btn" href="#/">Retour à l\'accueil</a>'); }
   };
 
   document.addEventListener("click", function (e) {
@@ -3118,6 +3131,7 @@ DATA.discussion = [
     if (h === "") return affiche(); /* adresse seule = page de garde avec plan et QR */
     if (h.indexOf("#c=") === 0) return chainView(h.slice(3));
     var p = h.replace(/^#\/?/, "") || "home";
+    if (ORDER[p] !== undefined && ORDER[p] > (ST.prog || 0)) { homeNoteAt = Date.now(); if (location.hash !== "#/") { location.hash = "#/"; return; } p = "home"; }
     ({ home: home, s1: s1, s2: s2, s3: s3, s4: s4, formateur: formateur, affiche: affiche }[p] || home)();
   }
   window.addEventListener("hashchange", route);
