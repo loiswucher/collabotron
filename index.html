@@ -2863,12 +2863,12 @@ DATA.discussion = [
       return '<button class="btn alt" data-act="chainstart" data-id="' + s.id + '">Situation ' + s.id + "</button>";
     }).join("");
     page("Chaîne", '<h1>Station 3 : la chaîne</h1>' + mode("chacun", [
-      "Asseyez-vous en <b>cercle</b>. Le QR code passe de téléphone en téléphone, vers la personne à votre <b>gauche</b>.",
-      "L'un de vous choisit une situation et la débute. Il répond <b>seul</b> aux consignes, sans le groupe.",
+      "Asseyez-vous en <b>cercle</b>. Les QR codes passent à votre <b>gauche</b> ; vous recevez de votre <b>droite</b>. Ainsi, personne n'attend : quatre chaînes tournent en même temps.",
+      "Chacun choisit une situation <b>différente</b> (1, 2, 3, 4) et la débute. Vous répondez <b>seul</b> aux consignes, sans le groupe.",
       "Écrivez votre transmission, touchez « Valider ». Un QR code apparaît.",
       "Montrez-le à la personne à votre <b>gauche</b>. Elle le scanne avec l'<b>appareil photo</b> de son téléphone.",
-      "À son tour, la personne qui a scanné lit le message <b>seule</b> et joue son rôle (IDE, AS de la relève…), puis écrit sa propre transmission.",
-      "Répétez jusqu'au dernier participant. Quand il valide, sa <b>révélation</b> s'affiche : à ce moment, tout le monde se rassemble autour <b>d'un seul téléphone</b>."]) +
+      "Quand vous recevez un QR code, lisez le message <b>seul</b>, jouez votre rôle (IDE, AS de la relève…) et écrivez votre propre transmission.",
+      "<b>Discrétion :</b> ne montrez pas ce que vous écrivez au reste du groupe. L'intérêt de l'exercice repose sur cette discrétion. Répétez jusqu'au dernier participant. Quand il valide, sa <b>révélation</b> s'affiche : à ce moment, tout le monde se rassemble autour <b>d'un seul téléphone</b>."]) +
       '<p>Un message passe de téléphone en téléphone, comme au téléphone arabe. Chacun lit seulement le message du précédent. À la fin, vous comparez avec les faits d\'origine.</p>' +
       '<div class="card"><b>Nombre de participants dans la chaîne</b><div class="row" style="margin-top:6px">' + [3, 4, 5].map(function (n) { return '<button class="btn ' + (chainLen === n ? "" : "alt") + '" data-act="chainlen" data-n="' + n + '">' + n + " participants</button>"; }).join("") + '</div><p class="notice">Choisissez le nombre de personnes de votre groupe.</p></div>' +
       "<h2>Je démarre ma chaîne avec…</h2>" + sits +
@@ -2960,7 +2960,7 @@ DATA.discussion = [
       '<button class="btn alt" data-act="copy" data-url="' + esc(url) + '">Copier le lien</button>' +
       (navigator.share ? '<button class="btn alt" data-act="share" data-url="' + esc(url) + '">Partager le lien</button>' : "") +
       '<button class="btn ghost" data-act="back">Modifier mon message</button>' +
-      '<p class="notice">Quand la personne à votre gauche a reçu votre message, votre part est terminée pour cette chaîne. Les autres chaînes continuent : scannez le QR code que votre voisin de droite vous présente.</p>' +
+      '<p class="notice">Quand la personne à votre gauche a reçu votre message, votre part est terminée pour cette chaîne.</p>' +
       '<a class="btn" href="#/s3">Retour à la station 3</a>');
   }
 
