@@ -2752,7 +2752,7 @@ DATA.discussion = [
     page("", '<h1>Transmettre juste</h1><p>Séance en autonomie · 2 h 30. Le but : que ce que vous dites à l\'IDE soit fidèle à ce que vous avez vu, utile, et dit au bon moment.</p>' +
       '<div class="card teal"><b>Avant de commencer</b><ul class="clean"><li>Installez-vous par groupes de <b>4</b>, en cercle, chacun avec son téléphone chargé.</li><li>Deux façons de travailler, indiquées en haut de chaque écran : <b>👥 ENSEMBLE</b> (un seul téléphone au centre) ou <b>📱 CHACUN</b> (votre téléphone, sans regarder celui des autres).</li><li>Les stations s\'ouvrent <b>une par une</b>, dans l\'ordre. Gardez votre position dans le groupe et avancez ensemble.</li><li>Rien n\'est enregistré en dehors de votre téléphone.</li></ul></div>' +
       note + "<h2>Le plan</h2>" + rows + action +
-      '<p class="notice"><a href="#/formateur">Page formateur</a> · <a href="#/affiche">Page de garde</a> · <a href="#" data-act="reset">Effacer mes réponses</a></p>');
+      '<p class="notice"><a href="#/affiche">Page de garde</a> · <a href="#" data-act="reset">Effacer mes réponses</a></p>');
   }
 
   /* ---------- station 1 : le tri ---------- */
@@ -3035,15 +3035,7 @@ DATA.discussion = [
       '<button class="btn" data-act="s4copy">Copier mon bilan</button><button class="btn orange" data-act="s4fin">Terminer la séance</button>', { timer: "s4" });
   }
 
-  /* ---------- formateur et affiche ---------- */
-  function formateur() {
-    page("Formateur", '<h1>Page formateur</h1>' +
-      '<div class="card"><b>Avant la séance</b><ul class="clean"><li>Projetez la <a href="#/affiche">page de garde</a> (l\'adresse de l\'appli seule l\'affiche aussi) : elle montre le plan et le QR code, que les apprenants scannent avec l\'appareil photo de leur téléphone.</li><li>Deux modes de travail sont indiqués à l\'écran : <b>ENSEMBLE</b> (un téléphone au centre : station 1, échange de la station 2, révélations de la chaîne, discussion finale) et <b>CHACUN</b> (écriture de la station 2, chaîne, bilan écrit).</li><li>Prévoyez des groupes de 4 (3 ou 5 sont possibles : le démarreur de la chaîne choisit sa longueur).</li><li>Demandez aux apprenants de venir avec un téléphone chargé et une connexion internet.</li><li>Aucune donnée n\'est envoyée nulle part : les réponses restent sur le téléphone, les messages de la chaîne voyagent dans le QR code.</li></ul></div>' +
-      '<div class="card"><b>Déroulé (2 h 30)</b><ul class="clean"><li>Station 1, le tri : 35 min</li><li>Station 2, reformuler : 30 min</li><li>Station 3, la chaîne : 70 min</li><li>Station 4, bilan : 15 min</li></ul><p class="notice">Les chronomètres sont indicatifs et ne bloquent rien.</p></div>' +
-      '<div class="card"><b>Si le QR ne se scanne pas</b><ul class="clean"><li>Luminosité au maximum, écran propre, sans reflet.</li><li>Utiliser « Copier le lien » puis envoyer le lien par message.</li><li>Les messages sont limités à ' + MAXLEN + ' caractères pour que le QR reste lisible.</li></ul></div>' +
-      '<div class="card"><b>Ce qui est évalué par les apprenants eux-mêmes</b><p>Le tri est corrigé automatiquement. Les reformulations et la révélation de la chaîne s\'analysent entre apprenants, avec des exemples et des questions de discussion intégrés.</p></div>' +
-      '<a class="btn" href="#/affiche">Afficher l\'affiche QR</a><button class="btn alt" data-act="unlock">Débloquer toutes les stations sur cet appareil (test)</button><a class="btn alt" href="#" data-act="reset">Effacer mes données sur cet appareil</a>');
-  }
+  /* ---------- page de garde ---------- */
   function hm(min) { var h = Math.floor(min / 60) % 24, m = min % 60; return h + " h " + (m < 10 ? "0" : "") + m; }
   function planHtml() {
     var t0 = ST.debut ? (+ST.debut.split(":")[0]) * 60 + (+ST.debut.split(":")[1]) : null, t = t0;
@@ -3100,7 +3092,6 @@ DATA.discussion = [
     },
     debut: function (el) { ST.debut = el.value; save(); var pl = $("#plan"); if (pl) pl.innerHTML = planHtml(); },
     goto: function (el) { ST.prog = Math.max(ST.prog || 0, +el.dataset.n); if (el.dataset.to === "s4") ST.s3.done = true; save(); location.hash = "#/" + el.dataset.to; },
-    unlock: function () { ST.prog = STATIONS.length; save(); location.hash = "#/"; },
     skip: function () { if (confirm("Tout le groupe a-t-il terminé cette station ?")) { ST.prog = Math.min((ST.prog || 0) + 1, STATIONS.length); save(); home(); } },
     s4txt: function (el) { ST.s4[el.dataset.f] = el.value; save(); },
     s4copy: async function (el) {
@@ -3132,7 +3123,7 @@ DATA.discussion = [
     if (h.indexOf("#c=") === 0) return chainView(h.slice(3));
     var p = h.replace(/^#\/?/, "") || "home";
     if (ORDER[p] !== undefined && ORDER[p] > (ST.prog || 0)) { homeNoteAt = Date.now(); if (location.hash !== "#/") { location.hash = "#/"; return; } p = "home"; }
-    ({ home: home, s1: s1, s2: s2, s3: s3, s4: s4, formateur: formateur, affiche: affiche }[p] || home)();
+    ({ home: home, s1: s1, s2: s2, s3: s3, s4: s4, affiche: affiche }[p] || home)();
   }
   window.addEventListener("hashchange", route);
   window.__tm = { route: route, encodeChain: encodeChain, decodeChain: decodeChain, state: function () { return ST; } };
