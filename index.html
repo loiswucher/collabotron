@@ -2519,6 +2519,8 @@ DATA.situations = [
     ],
     parasite: "La télé de la chambre qui ne marche plus",
     prescription: "Surveillez la douleur et la marche. Ne le levez pas seul aujourd'hui. Proposez-lui à boire toutes les 2 heures. Je passe le voir en fin de matinée.",
+    prescription2: "Complément : il part passer une radio de la hanche à 14 h. Prévenez le brancardier : il ne doit pas se lever seul. Notez l'heure et l'intensité de sa douleur avant le départ.",
+    clesRx2: ["Radio de la hanche à 14 h", "Prévenir le brancardier : il ne doit pas se lever seul", "Noter l'heure et l'intensité de la douleur avant le départ"],
     clesRx: [
       "Ne pas le lever seul aujourd'hui",
       "Lui proposer à boire toutes les 2 heures",
@@ -2544,6 +2546,8 @@ DATA.situations = [
     ],
     parasite: "La coiffeuse qui passe jeudi",
     prescription: "Boissons et repas en position bien assise et droite. Texture adaptée aux repas jusqu'à demain. Notez ce qu'elle mange et boit à chaque repas. Je la revois demain matin.",
+    prescription2: "Complément : je demande une évaluation de la déglutition par l'orthophoniste demain matin. D'ici là, elle ne boit plus seule, toujours accompagnée. Notez toute toux pendant les prises.",
+    clesRx2: ["Évaluation de la déglutition par l'orthophoniste demain matin", "Ne plus la laisser boire seule, toujours accompagnée", "Noter toute toux pendant les prises"],
     clesRx: [
       "Boissons et repas en position bien assise et droite",
       "Texture adaptée aux repas jusqu'à demain",
@@ -2569,6 +2573,8 @@ DATA.situations = [
     ],
     parasite: "Le fauteuil laissé dans le couloir",
     prescription: "Ne le forcez pas pour la toilette ce matin, reproposez-la plus tard. Restez un moment avec lui et proposez-lui à boire régulièrement. Prévenez-moi tout de suite s'il redit des choses de ce genre. Je passe le voir cet après-midi.",
+    prescription2: "Complément : je demande la visite de la psychologue de l'équipe demain. Ne le laissez pas seul trop longtemps. Notez ce qu'il dit et à quelle heure.",
+    clesRx2: ["Visite de la psychologue demain", "Ne pas le laisser seul trop longtemps", "Noter ce qu'il dit et à quelle heure"],
     clesRx: [
       "Ne pas le forcer pour la toilette, la reproposer plus tard",
       "Rester un moment avec lui, proposer à boire régulièrement",
@@ -2595,6 +2601,8 @@ DATA.situations = [
     ],
     parasite: "L'eau de la toilette trop froide",
     prescription: "Soulagez l'appui du talon droit avec un coussin ou une talonnière. Faites-la changer de position toutes les 2 heures. Proposez-lui à boire régulièrement. Montrez-moi le talon cet après-midi.",
+    prescription2: "Complément : mesurez la rougeur chaque jour et notez-la. Ne massez pas le talon.",
+    clesRx2: ["Mesurer la rougeur chaque jour et la noter", "Ne pas masser le talon"],
     clesRx: [
       "Soulager l'appui du talon droit (coussin ou talonnière)",
       "La faire changer de position toutes les 2 heures",
@@ -2620,6 +2628,8 @@ DATA.situations = [
     ],
     parasite: "La visite du fils déplacée à demain",
     prescription: "Prenez sa température toutes les 4 heures et notez-la. Proposez-lui à boire toutes les heures, en quantité. Prévenez-moi si elle dépasse 39 °C ou s'il a des frissons importants. Je repasse en début d'après-midi.",
+    prescription2: "Complément : une prise de sang sera faite demain matin, à jeun. Découvrez-le légèrement, sans le laisser frissonner. Notez ses urines de la journée.",
+    clesRx2: ["Prise de sang demain matin, à jeun", "Le découvrir légèrement, sans le laisser frissonner", "Noter ses urines de la journée"],
     clesRx: [
       "Température toutes les 4 heures, notée",
       "Lui proposer à boire toutes les heures, en quantité",
@@ -2916,10 +2926,10 @@ DATA.discussion = [
           body += '<button class="btn orange" data-act="callDr">Appeler le médecin</button>';
           ready = false;
         } else {
-          body += '<div class="card orange"><b>Le médecin vous répond :</b><br>« ' + esc(s.prescription) + ' »<p class="notice">Prescription fictive, à visée pédagogique.</p></div>';
+          body += '<div class="card orange"><b>' + (p >= 4 ? "Le médecin vous rappelle et complète sa prescription :" : "Le médecin vous répond :") + '</b><br>« ' + esc(p >= 4 ? s.prescription2 : s.prescription) + ' »<p class="notice">Prescription fictive, à visée pédagogique.</p></div>';
         }
         prompt = "Votre transmission à l'AS qui prend la relève";
-        hint = "Dites ce que vous avez compris de la situation et ce que le médecin a prescrit.";
+        hint = p >= 4 ? "Dites ce que vous avez compris de la situation, ce que le médecin avait déjà prescrit et son complément." : "Dites ce que vous avez compris de la situation et ce que le médecin a prescrit.";
       } else {
         body += '<p>Vous prenez la relève. Voici ce qu\'on vous a transmis.</p>';
         prompt = "Ce que vous transmettez à la personne suivante";
@@ -2975,8 +2985,9 @@ DATA.discussion = [
     var hops = []; for (var i = 1; i <= n; i++) hops.push(i);
     var head = "<tr><th>Élément</th>" + hops.map(function (h) { return "<th>P" + h + "<br>" + roleOf(h) + "</th>"; }).join("") + "</tr>";
     function rowFor(txt, key, rx, parasite) {
+      var from = key.charAt(0) === "q" ? 4 : (rx ? 2 : 1);
       var cells = hops.map(function (h) {
-        if (rx && h === 1) return '<td class="na">–</td>';
+        if (h < from) return '<td class="na">–</td>';
         var v = (mx.g[key + "_" + h]) || "";
         if (parasite) return '<td><button class="' + (v ? "pres" : "") + '" data-act="mxcell" data-key="' + key + '" data-h="' + h + '" data-par="1">' + (v ? "●" : "·") + "</button></td>";
         return '<td><button class="' + v + '" data-act="mxcell" data-key="' + key + '" data-h="' + h + '">' + SYM[v] + "</button></td>";
@@ -2985,6 +2996,7 @@ DATA.discussion = [
     }
     var rows = s.cles.map(function (c, i) { return rowFor(c, "c" + i, false); }).join("") +
       s.clesRx.map(function (c, i) { return rowFor(c, "r" + i, true); }).join("") +
+      (n >= 4 ? s.clesRx2.map(function (c, i) { return rowFor(c, "q" + i, true); }).join("") : "") +
       rowFor(s.parasite, "p0", false, true);
     var msgs = chain.m.map(function (m, i) { return '<div class="msg"><small>Participant ' + (i + 1) + " · " + esc(roleLabel(i + 1, n)) + "</small>" + nl(m) + "</div>"; }).join("");
     var counters = hops.map(function (h) {
@@ -2997,7 +3009,7 @@ DATA.discussion = [
       "Répondez aux 3 questions de discussion, à voix haute.",
       "Quand vous avez fini, prenez le téléphone d'un autre pour la révélation suivante."]) + "<h1>La révélation</h1><p><b>Situation " + s.id + " : " + esc(s.titre) + "</b></p>" +
       "<h2>Ce que l'AS savait au départ</h2><div class=\"card teal\"><ul class=\"clean\">" + s.fiche.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></div>" +
-      "<h2>Ce que le médecin a prescrit</h2><div class=\"card orange\">« " + esc(s.prescription) + " »</div>" +
+      "<h2>Ce que le médecin a prescrit</h2><div class=\"card orange\">« " + esc(s.prescription) + " »" + (n >= 4 ? "<p><b>Second appel :</b> « " + esc(s.prescription2) + " »</p>" : "") + "</div>" +
       "<h2>La chaîne, participant par participant</h2>" + msgs +
       "<h2>Analyse</h2><p>Pour chaque élément et chaque participant, touchez la case pour indiquer ce que contient le message.</p>" +
       '<p class="legend"><span><b>✓</b> bien transmis</span><span><b>≈</b> déformé</span><span><b>✗</b> perdu</span><span><b>·</b> pas évalué</span></p>' +
@@ -3012,11 +3024,11 @@ DATA.discussion = [
   }
   function summary() {
     var s = sit(chain.s), n = chain.n, out = [];
-    var keys = s.cles.map(function (_, i) { return "c" + i; }).concat(s.clesRx.map(function (_, i) { return "r" + i; }));
+    var keys = s.cles.map(function (_, i) { return "c" + i; }).concat(s.clesRx.map(function (_, i) { return "r" + i; })).concat(n >= 4 ? s.clesRx2.map(function (_, i) { return "q" + i; }) : []);
     for (var h = 1; h <= n; h++) {
       var ok = 0, def = 0, no = 0, tot = 0;
       keys.forEach(function (k) {
-        if (k.charAt(0) === "r" && h === 1) return;
+        if ((k.charAt(0) === "r" && h < 2) || (k.charAt(0) === "q" && h < 4)) return;
         var v = mx.g[k + "_" + h]; if (v === "ok") ok++; else if (v === "def") def++; else if (v === "no") no++;
       });
       if (ok + def + no) out.push("Participant " + h + " : " + ok + " bien transmis, " + def + " déformé" + (def > 1 ? "s" : "") + ", " + no + " perdu" + (no > 1 ? "s" : ""));
